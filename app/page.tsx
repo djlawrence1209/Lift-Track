@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Charts } from "./components/Charts"
 import { GoogleSheetsImport } from "./components/GoogleSheetsImport"
 import { SheetData } from "./lib/google-sheets"
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion"
 
 export default function Home() {
   // Sample data for charts - Only bench data for bench progress chart
@@ -1122,16 +1123,44 @@ export default function Home() {
                 </CardHeader>
                 <CardContent className="prose prose-sm">
                   <h3>1. Track Your Progress</h3>
-                  <p>Import your training data through Google Sheets or manual entry. We'll automatically analyze your lifts, volume, and patterns.</p>
+                  <p>Import your training data through Google Sheets API or manual entry using our Next.js 14.2.16 frontend. Your lifts, volume, and patterns are automatically analyzed with our data processing system.</p>
                   
                   <h3>2. Analyze Performance</h3>
-                  <p>View detailed breakdowns of your lifting progress, optimal rep ranges, and identify your best training days.</p>
+                  <p>View detailed breakdowns of your lifting progress, optimal rep ranges, and best training days with Recharts for interactive data visualization, seamlessly integrated into our TypeScript and Shadcn UI frontend.</p>
                   
                   <h3>3. Optimize Training</h3>
-                  <p>Use insights from your performance patterns to adjust your training schedule and rep schemes for maximum results.</p>
+                  <p>Leverage insights from Google Sheets API and data processing to fine-tune your training schedule and rep schemes. Our Tailwind CSS-styled interface ensures a smooth and intuitive experience for maximizing results.</p>
                 </CardContent>
                 <div className="px-6 pb-6 flex justify-center">
-                  <Button className="w-full" variant="outline">Learn More</Button>
+                  <Accordion type="single" collapsible className="w-full">
+                    <AccordionItem value="data">
+                      <AccordionTrigger className="text-center justify-center">
+                        See Data
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <div className="p-4 bg-gray-50 rounded-md max-h-64 overflow-auto">
+                          <h4 className="font-medium mb-2">Google Sheets Data Processing</h4>
+                          <pre className="whitespace-pre-wrap text-xs font-mono bg-black text-green-400 p-2 rounded">
+                            {importedData ? 
+                            `Processing with extended data format
+${importedData.rawData.filter(entry => 
+  entry.exercise && 
+  entry.exercise.toLowerCase().includes('competition') && 
+  (entry.exercise.toLowerCase().includes('squat') || 
+   entry.exercise.toLowerCase().includes('bench') || 
+   entry.exercise.toLowerCase().includes('deadlift'))
+).map(entry => 
+  `Adding to Week 1 - Exercise: ${entry.exercise}, Sets: ${entry.sets}, Reps: ${entry.reps}, Weight: ${entry.weight}, Tonnage: ${entry.sets * entry.reps * entry.weight}`
+).join('\n')}
+${importedData.volumeData ? 
+`Generated ${importedData.volumeData.length} volume data points: ${JSON.stringify(importedData.volumeData)}
+Processed data: ${importedData.maxLiftsData.length} lift entries, ${importedData.volumeData.length} volume entries` : ''}` 
+                            : 'Import data to see the data processing logs here'}
+                          </pre>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
                 </div>
               </Card>
             </div>
