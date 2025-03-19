@@ -26,4 +26,3 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-NEXT_PUBLIC_GOOGLE_SHEETS_API_KEY=AIzaSyDN-gK5pMghXlr-5x2kcLx3gw6gH7ssvZQ
