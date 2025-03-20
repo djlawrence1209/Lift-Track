@@ -28,6 +28,7 @@ Lift-Track is a web-based tool designed to help powerlifters and strength athlet
 ## Screenshot
 
 ![Lift-Track Dashboard](public/benchprog.JPG)
+![Lift-Track Dashboard](public/good-bad.JPG)
 
 
 ## Setup Instructions
