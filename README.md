@@ -25,6 +25,11 @@ Lift-Track is a web-based tool designed to help powerlifters and strength athlet
 - **Data Processing:** Google Sheets API, JSON parsing
 - **Visualization:** Recharts
 
+## Screenshot
+
+![Lift-Track Dashboard](public/good and bad.JPG)
+
+
 ## Setup Instructions
 1. Clone the repository:
    ```bash
