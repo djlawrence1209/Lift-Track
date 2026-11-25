@@ -13,6 +13,27 @@ import { Charts } from "./components/Charts"
 import { GoogleSheetsImport } from "./components/GoogleSheetsImport"
 import { SheetData } from "./lib/google-sheets"
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion"
+import { KpiInsights } from "./components/KpiInsights"
+import { Forecast } from "./components/Forecast"
+import {
+  LIFTS,
+  buildInsights,
+  e1rmByBlock,
+  extractEntries,
+  forecastLift,
+  maxLiftsByBlock,
+  sampleInsights,
+  volumeByBlock,
+  type BlockPoint,
+} from "./lib/analytics"
+
+// Example history used until the user imports their own sheet
+const SAMPLE_E1RM: BlockPoint[] = [
+  { block: 1, label: "Block 1", bench: 205, squat: 285, deadlift: 340 },
+  { block: 2, label: "Block 2", bench: 212, squat: 296, deadlift: 352 },
+  { block: 3, label: "Block 3", bench: 221, squat: 301, deadlift: 371 },
+  { block: 4, label: "Block 4", bench: 226, squat: 314, deadlift: 380 },
+]
 
 export default function Home() {
   // Sample data for charts - Only bench data for bench progress chart
@@ -311,8 +332,24 @@ export default function Home() {
     volumeData: Array<{ week: string; volume: number; tonnage: number }>;
     rawData: SheetData[];
   }) => {
-    setImportedData(data);
+    // Re-derive block-based series from the raw rows so every block (not just the first) is used
+    const parsed = extractEntries(data.rawData);
+    const blockLifts = maxLiftsByBlock(parsed);
+    const blockVolume = volumeByBlock(parsed);
+    setImportedData({
+      ...data,
+      maxLiftsData: blockLifts.length ? blockLifts : data.maxLiftsData,
+      volumeData: blockVolume.length ? blockVolume : data.volumeData,
+    });
   };
+
+  // Key performance indicators + 1RM forecasts
+  const entries = extractEntries(importedData?.rawData);
+  const e1rmSeries = entries.length ? e1rmByBlock(entries) : SAMPLE_E1RM;
+  const dataInsights = buildInsights(entries);
+  const hasAccessoryInsight = dataInsights.some((i) => i.kind === "accessory");
+  const insights = hasAccessoryInsight ? dataInsights : [...sampleInsights(), ...dataInsights];
+  const forecasts = LIFTS.map((l) => forecastLift(e1rmSeries, l)).filter((f): f is NonNullable<typeof f> => !!f);
 
   // Use imported data if available, otherwise use sample data
   const chartData = {
@@ -451,7 +488,7 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-10 border-b bg-white">
+      <header className="sticky top-0 z-10 border-b border-border/60 bg-background/70 backdrop-blur-md">
         <div className="flex h-16 items-center justify-between px-4 md:px-6">
           <div className="flex items-center gap-6">
             <Link href="/" className="flex items-center gap-2 font-bold">
@@ -479,8 +516,8 @@ export default function Home() {
         <main className="flex-1 p-4 md:p-6">
           <div className="grid gap-6">
             <div className="grid gap-6 md:grid-cols-2">
-              <Card className="overflow-hidden border-2">
-                <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100">
+              <Card className="overflow-hidden border">
+                <CardHeader className="bg-gradient-to-r from-cyan-500/10 to-violet-500/10">
                   <div className="flex justify-between items-center">
                     <div>
                       <CardTitle>Bench Progress</CardTitle>
@@ -502,23 +539,23 @@ export default function Home() {
                     performanceData={chartData.performanceData}
                     activeTab="bench"
                   />
-                  <div className="flex justify-between items-center px-6 py-3 bg-gray-50 border-t">
-                    <div className="text-sm text-gray-500">
-                      Current max: <span className="font-bold text-black">
+                  <div className="flex justify-between items-center px-6 py-3 bg-muted/40 border-t border-border/60">
+                    <div className="text-sm text-muted-foreground">
+                      Current max: <span className="font-bold text-foreground">
                         {chartData.benchData.length ? 
                           chartData.benchData[chartData.benchData.length - 1].weight : 
                           225} lbs
                       </span>
                     </div>
-                    <div className="text-sm text-gray-500">
-                      Next goal: <span className="font-bold text-black">
+                    <div className="text-sm text-muted-foreground">
+                      Next goal: <span className="font-bold text-foreground">
                         {chartData.benchData.length ? 
                           chartData.benchData[chartData.benchData.length - 1].goal : 
                           235} lbs
                       </span>
                     </div>
-                    <div className="text-sm text-gray-500">
-                      Last RPE: <span className="font-bold text-black">
+                    <div className="text-sm text-muted-foreground">
+                      Last RPE: <span className="font-bold text-foreground">
                         {chartData.benchData.length ? 
                           chartData.benchData[chartData.benchData.length - 1].rpe : 
                           9.5}/10
@@ -527,15 +564,7 @@ export default function Home() {
                   </div>
                 </CardContent>
               </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Import Data</CardTitle>
-                  <CardDescription>Import your training data from Google Sheets</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <GoogleSheetsImport onDataImport={handleDataImport} />
-                </CardContent>
-              </Card>
+              <GoogleSheetsImport onDataImport={handleDataImport} />
             </div>
             <Card>
               <CardHeader>
@@ -543,8 +572,10 @@ export default function Home() {
                 <CardDescription>Your powerlifting progress over time</CardDescription>
               </CardHeader>
               <CardContent>
-                <Tabs defaultValue="maxLifts">
-                  <TabsList className="mb-4">
+                <Tabs defaultValue="insights">
+                  <TabsList className="mb-4 flex-wrap h-auto">
+                    <TabsTrigger value="insights">Key Indicators</TabsTrigger>
+                    <TabsTrigger value="forecast">1RM Forecast</TabsTrigger>
                     <TabsTrigger value="maxLifts">Max Lifts</TabsTrigger>
                     <TabsTrigger value="fatigue">Fatigue</TabsTrigger>
                     <TabsTrigger value="performance">Best/Worst Days</TabsTrigger>
@@ -552,6 +583,14 @@ export default function Home() {
                     <TabsTrigger value="accessories">Accessory Volume</TabsTrigger>
                     <TabsTrigger value="optimal">Optimal Reps</TabsTrigger>
                   </TabsList>
+
+                  <TabsContent value="insights" className="space-y-4">
+                    <KpiInsights insights={insights} usingSample={!hasAccessoryInsight} />
+                  </TabsContent>
+
+                  <TabsContent value="forecast" className="space-y-4">
+                    <Forecast forecasts={forecasts} usingSample={entries.length === 0} />
+                  </TabsContent>
 
                   {/* Max Lifts Tab */}
                   <TabsContent value="maxLifts" className="space-y-4">
@@ -566,7 +605,7 @@ export default function Home() {
                       activeTab="maxLifts"
                     />
                     <div className="grid grid-cols-3 gap-4">
-                      <Card className="bg-gray-50">
+                      <Card className="bg-muted/40">
                         <CardContent className="p-4">
                           <div className="text-sm font-medium">Bench</div>
                           <div className="text-2xl font-bold">
@@ -580,7 +619,7 @@ export default function Home() {
                               return 225;
                             })()} lbs
                           </div>
-                          <div className="text-xs text-green-600">
+                          <div className="text-xs text-emerald-300">
                             +{(() => {
                               if (chartData.maxLiftsData.length > 1 && 
                                   chartData.maxLiftsData[chartData.maxLiftsData.length - 1].bench !== undefined &&
@@ -604,7 +643,7 @@ export default function Home() {
                           </div>
                         </CardContent>
                       </Card>
-                      <Card className="bg-gray-50">
+                      <Card className="bg-muted/40">
                         <CardContent className="p-4">
                           <div className="text-sm font-medium">Squat</div>
                           <div className="text-2xl font-bold">
@@ -618,7 +657,7 @@ export default function Home() {
                               return 325;
                             })()} lbs
                           </div>
-                          <div className="text-xs text-green-600">
+                          <div className="text-xs text-emerald-300">
                             +{(() => {
                               if (chartData.maxLiftsData.length > 1 && 
                                   chartData.maxLiftsData[chartData.maxLiftsData.length - 1].squat !== undefined &&
@@ -642,7 +681,7 @@ export default function Home() {
                           </div>
                         </CardContent>
                       </Card>
-                      <Card className="bg-gray-50">
+                      <Card className="bg-muted/40">
                         <CardContent className="p-4">
                           <div className="text-sm font-medium">Deadlift</div>
                           <div className="text-2xl font-bold">
@@ -656,7 +695,7 @@ export default function Home() {
                               return 405;
                             })()} lbs
                           </div>
-                          <div className="text-xs text-green-600">
+                          <div className="text-xs text-emerald-300">
                             +{(() => {
                               if (chartData.maxLiftsData.length > 1 && 
                                   chartData.maxLiftsData[chartData.maxLiftsData.length - 1].deadlift !== undefined &&
@@ -696,18 +735,18 @@ export default function Home() {
                       activeTab="volume"
                     />
                     <div className="grid grid-cols-2 gap-4">
-                      <Card className="bg-gray-50">
+                      <Card className="bg-muted/40">
                         <CardContent className="p-4">
                           <div className="text-sm font-medium">Weekly Average Tonnage</div>
                           <div className="text-2xl font-bold">14,375 lbs</div>
                           <div className="text-xs text-muted-foreground">Based on last 4 weeks</div>
                         </CardContent>
                       </Card>
-                      <Card className="bg-gray-50">
+                      <Card className="bg-muted/40">
                         <CardContent className="p-4">
                           <div className="text-sm font-medium">Highest Volume Week</div>
                           <div className="text-2xl font-bold">Week 4: 18,750 lbs</div>
-                          <div className="text-xs text-green-600">25% above average</div>
+                          <div className="text-xs text-emerald-300">25% above average</div>
                         </CardContent>
                       </Card>
                     </div>
@@ -728,7 +767,7 @@ export default function Home() {
                     
                     {/* RPE & Recovery Score Explanation */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Card className="bg-gray-50">
+                      <Card className="bg-muted/40">
                         <CardHeader className="pb-2">
                           <CardTitle className="text-lg">Understanding RPE & Recovery</CardTitle>
                         </CardHeader>
@@ -770,41 +809,41 @@ export default function Home() {
                         const hasConsecutiveHighRpe = highRpeDays.length >= 3;
                         
                         return hasConsecutiveHighRpe ? (
-                          <Card className="border rounded-lg bg-red-50 border-red-200">
+                          <Card className="border rounded-lg bg-rose-500/10 border-rose-500/30">
                             <CardHeader className="pb-2">
                               <div className="flex items-center gap-2">
-                                <AlertTriangle className="h-5 w-5 text-red-500" />
-                                <CardTitle className="text-lg text-red-700">Fatigue Warning</CardTitle>
+                                <AlertTriangle className="h-5 w-5 text-rose-400" />
+                                <CardTitle className="text-lg text-rose-300">Fatigue Warning</CardTitle>
                               </div>
                             </CardHeader>
                             <CardContent>
-                              <p className="text-sm text-red-700">
+                              <p className="text-sm text-rose-300">
                                 Your RPE has been higher than 8.5 for {highRpeDays.length} days
                                 ({highRpeDays.join(", ")}). Consider a deload or
                                 recovery day to prevent overtraining and injury.
                               </p>
-                              <div className="mt-3 text-sm text-red-600">
+                              <div className="mt-3 text-sm text-rose-300">
                                 <strong>Recommendation:</strong> Schedule a light recovery session or rest day followed by
                                 a 10-15% reduction in volume for your next training session.
                               </div>
                             </CardContent>
                           </Card>
                         ) : (
-                          <Card className="border rounded-lg bg-green-50 border-green-200">
+                          <Card className="border rounded-lg bg-emerald-500/10 border-emerald-500/30">
                             <CardHeader className="pb-2">
                               <div className="flex items-center gap-2">
-                                <div className="h-5 w-5 rounded-full bg-green-500 flex items-center justify-center text-white">
+                                <div className="h-5 w-5 rounded-full bg-emerald-500/100 flex items-center justify-center text-white">
                                   ✓
                                 </div>
-                                <CardTitle className="text-lg text-green-700">Recovery Status</CardTitle>
+                                <CardTitle className="text-lg text-emerald-300">Recovery Status</CardTitle>
                               </div>
                             </CardHeader>
                             <CardContent>
-                              <p className="text-sm text-green-700">
+                              <p className="text-sm text-emerald-300">
                                 Your fatigue levels are currently manageable. Maintain your current training intensity and continue
                                 monitoring your RPE scores to prevent overtraining.
                               </p>
-                              <div className="mt-3 text-sm text-green-600">
+                              <div className="mt-3 text-sm text-emerald-300">
                                 <strong>Recommendation:</strong> Focus on quality nutrition and sleep to maintain your recovery capacity.
                               </div>
                             </CardContent>
@@ -845,25 +884,25 @@ export default function Home() {
                       ]}
                     />
                     <div className="grid grid-cols-3 gap-4">
-                      <Card className="bg-gray-50">
+                      <Card className="bg-muted/40">
                         <CardContent className="p-4">
                           <div className="text-sm font-medium">Total Squat Accessories</div>
                           <div className="text-2xl font-bold">8,200 lbs</div>
-                          <div className="text-xs text-green-600">+900 lbs from last week</div>
+                          <div className="text-xs text-emerald-300">+900 lbs from last week</div>
                         </CardContent>
                       </Card>
-                      <Card className="bg-gray-50">
+                      <Card className="bg-muted/40">
                         <CardContent className="p-4">
                           <div className="text-sm font-medium">Total Bench Accessories</div>
                           <div className="text-2xl font-bold">5,800 lbs</div>
-                          <div className="text-xs text-green-600">+500 lbs from last week</div>
+                          <div className="text-xs text-emerald-300">+500 lbs from last week</div>
                         </CardContent>
                       </Card>
-                      <Card className="bg-gray-50">
+                      <Card className="bg-muted/40">
                         <CardContent className="p-4">
                           <div className="text-sm font-medium">Total Deadlift Accessories</div>
                           <div className="text-2xl font-bold">8,100 lbs</div>
-                          <div className="text-xs text-green-600">+700 lbs from last week</div>
+                          <div className="text-xs text-emerald-300">+700 lbs from last week</div>
                         </CardContent>
                       </Card>
                     </div>
@@ -886,7 +925,7 @@ export default function Home() {
                         />
                       </div>
                       <div className="space-y-4">
-                        <Card className="bg-gray-50">
+                        <Card className="bg-muted/40">
                           <CardHeader className="pb-2">
                             <CardTitle className="text-lg">Your Optimal Rep Ranges</CardTitle>
                           </CardHeader>
@@ -939,7 +978,7 @@ export default function Home() {
                                     <div className="flex items-center gap-2">
                                       <div
                                         className={`h-2 rounded-full ${
-                                          score >= 7 ? "bg-green-500" : score >= 4 ? "bg-yellow-500" : "bg-red-500"
+                                          score >= 7 ? "bg-emerald-500/100" : score >= 4 ? "bg-amber-400" : "bg-rose-500/100"
                                         }`}
                                         style={{ width: `${score * 10}px` }}
                                       />
@@ -947,10 +986,10 @@ export default function Home() {
                                         className={`
                                         ${
                                           score >= 7
-                                            ? "text-green-700"
+                                            ? "text-emerald-300"
                                             : score >= 4
-                                              ? "text-yellow-700"
-                                              : "text-red-700"
+                                              ? "text-amber-300"
+                                              : "text-rose-300"
                                         } font-medium
                                       `}
                                       >
@@ -967,24 +1006,24 @@ export default function Home() {
                           const { best, worst } = findBestAndWorstDays(chartData.performanceData);
                           return (
                             <>
-                              <Card className="bg-green-50">
+                              <Card className="bg-emerald-500/10">
                                 <CardHeader className="pb-2">
-                                  <CardTitle className="text-lg text-green-800">Best Training Day</CardTitle>
+                                  <CardTitle className="text-lg text-emerald-300">Best Training Day</CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                  <p className="text-green-700 font-medium">{best.day} ({best.score.toFixed(1)}/10 average)</p>
-                                  <p className="text-sm text-green-600 mt-1">
+                                  <p className="text-emerald-300 font-medium">{best.day} ({best.score.toFixed(1)}/10 average)</p>
+                                  <p className="text-sm text-emerald-300 mt-1">
                                     Highest average performance score across training weeks
                                   </p>
                                 </CardContent>
                               </Card>
-                              <Card className="bg-red-50">
+                              <Card className="bg-rose-500/10">
                                 <CardHeader className="pb-2">
-                                  <CardTitle className="text-lg text-red-800">Worst Training Day</CardTitle>
+                                  <CardTitle className="text-lg text-rose-300">Worst Training Day</CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                  <p className="text-red-700 font-medium">{worst.day} ({worst.score.toFixed(1)}/10 average)</p>
-                                  <p className="text-sm text-red-600 mt-1">
+                                  <p className="text-rose-300 font-medium">{worst.day} ({worst.score.toFixed(1)}/10 average)</p>
+                                  <p className="text-sm text-rose-300 mt-1">
                                     Lowest average performance, consider adjusting {worst.day} workouts
                                   </p>
                                 </CardContent>
@@ -999,8 +1038,8 @@ export default function Home() {
               </CardContent>
             </Card>
             <div className="grid gap-6 md:grid-cols-2">
-              <Card className="overflow-hidden border-2">
-                <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100">
+              <Card className="overflow-hidden border">
+                <CardHeader className="bg-gradient-to-r from-cyan-500/10 to-violet-500/10">
                   <div className="flex justify-between items-center">
                     <div>
                       <CardTitle>Deadlift Progress</CardTitle>
@@ -1047,9 +1086,9 @@ export default function Home() {
                         ]
                     }
                   />
-                  <div className="flex justify-between items-center px-6 py-3 bg-gray-50 border-t">
-                    <div className="text-sm text-gray-500">
-                      Current max: <span className="font-bold text-black">
+                  <div className="flex justify-between items-center px-6 py-3 bg-muted/40 border-t border-border/60">
+                    <div className="text-sm text-muted-foreground">
+                      Current max: <span className="font-bold text-foreground">
                         {(() => {
                           // Get the deadlift data that's being passed to the Charts component
                           const deadliftData = importedData?.rawData?.length ? 
@@ -1067,8 +1106,8 @@ export default function Home() {
                         })()} lbs
                       </span>
                     </div>
-                    <div className="text-sm text-gray-500">
-                      Next goal: <span className="font-bold text-black">
+                    <div className="text-sm text-muted-foreground">
+                      Next goal: <span className="font-bold text-foreground">
                         {(() => {
                           // Get the latest goal from sample data if no imported data
                           const sampleData = [
@@ -1094,8 +1133,8 @@ export default function Home() {
                         })()} lbs
                       </span>
                     </div>
-                    <div className="text-sm text-gray-500">
-                      Last RPE: <span className="font-bold text-black">
+                    <div className="text-sm text-muted-foreground">
+                      Last RPE: <span className="font-bold text-foreground">
                         {(() => {
                           // Get the deadlift data with RPE
                           const deadliftData = importedData?.rawData?.length ? 
@@ -1121,7 +1160,7 @@ export default function Home() {
                   <CardTitle>How It Works</CardTitle>
                   <CardDescription>Understanding your powerlifting analytics</CardDescription>
                 </CardHeader>
-                <CardContent className="prose prose-sm">
+                <CardContent className="prose prose-sm prose-invert">
                   <h3>1. Track Your Progress</h3>
                   <p>Import your training data through Google Sheets API or manual entry using our Next.js 14.2.16 frontend. Your lifts, volume, and patterns are automatically analyzed with our data processing system.</p>
                   
@@ -1138,9 +1177,9 @@ export default function Home() {
                         See Data
                       </AccordionTrigger>
                       <AccordionContent>
-                        <div className="p-4 bg-gray-50 rounded-md max-h-64 overflow-auto">
+                        <div className="p-4 bg-muted/40 rounded-md max-h-64 overflow-auto">
                           <h4 className="font-medium mb-2">Google Sheets Data Processing</h4>
-                          <pre className="whitespace-pre-wrap text-xs font-mono bg-black text-green-400 p-2 rounded">
+                          <pre className="whitespace-pre-wrap text-xs font-mono bg-background text-emerald-300 p-2 rounded">
                             {importedData ? 
                             `Processing with extended data format
 ${importedData.rawData.filter(entry => 

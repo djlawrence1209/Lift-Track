@@ -1,9 +1,31 @@
 import { NextResponse } from 'next/server';
-import { google } from 'googleapis';
 import { processSheetData } from '@/app/lib/google-sheets';
 
-const sheets = google.sheets('v4');
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_SHEETS_API_KEY;
+
+// Minimal RFC 4180 CSV parser (quoted fields, escaped quotes, CRLF).
+function parseCsv(text: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let field = '';
+  let quoted = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (quoted) {
+      if (c === '"' && text[i + 1] === '"') { field += '"'; i++; }
+      else if (c === '"') quoted = false;
+      else field += c;
+    } else if (c === '"') quoted = true;
+    else if (c === ',') { row.push(field); field = ''; }
+    else if (c === '\n' || c === '\r') {
+      if (c === '\r' && text[i + 1] === '\n') i++;
+      row.push(field); field = '';
+      rows.push(row); row = [];
+    } else field += c;
+  }
+  if (field !== '' || row.length) { row.push(field); rows.push(row); }
+  return rows;
+}
 
 export async function POST(request: Request) {
   try {
@@ -24,23 +46,42 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!API_KEY) {
-      return NextResponse.json(
-        { error: 'Google Sheets API key is not configured' },
-        { status: 500 }
-      );
-    }
-
     console.log(`Fetching spreadsheet data - ID: ${spreadsheetId}, Range: ${range}`);
 
     try {
-      const response = await sheets.spreadsheets.values.get({
-        spreadsheetId,
-        range,
-        key: API_KEY,
-      });
-
-      const rows = response.data.values;
+      let rows: any[][] | null | undefined;
+      if (API_KEY) {
+        const { google } = await import('googleapis');
+        const sheets = google.sheets('v4');
+        const response = await sheets.spreadsheets.values.get({
+          spreadsheetId,
+          range,
+          key: API_KEY,
+        });
+        rows = response.data.values;
+      } else {
+        // No API key configured: read the sheet through its public CSV export.
+        // Works for any sheet shared as "Anyone with the link can view".
+        const sheetName = range.includes('!') ? range.split('!')[0].replace(/^'|'$/g, '') : '';
+        const csvUrl =
+          `https://docs.google.com/spreadsheets/d/${encodeURIComponent(spreadsheetId)}/gviz/tq?tqx=out:csv` +
+          (sheetName ? `&sheet=${encodeURIComponent(sheetName)}` : '');
+        const csvRes = await fetch(csvUrl, { cache: 'no-store' });
+        if (!csvRes.ok) {
+          return NextResponse.json(
+            { error: 'Could not read the sheet. Share it as "Anyone with the link can view" and try again.' },
+            { status: csvRes.status === 404 ? 404 : 403 }
+          );
+        }
+        const text = await csvRes.text();
+        if (text.trimStart().startsWith('<')) {
+          return NextResponse.json(
+            { error: 'The sheet is private. Share it as "Anyone with the link can view" and try again.' },
+            { status: 403 }
+          );
+        }
+        rows = parseCsv(text);
+      }
       if (!rows || rows.length === 0) {
         return NextResponse.json(
           { error: 'No data found in spreadsheet' },

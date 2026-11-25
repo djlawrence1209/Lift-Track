@@ -43,7 +43,7 @@ const CustomTooltip = ({ active, payload, label }: {
 }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white p-3 border rounded shadow-sm">
+      <div className="bg-popover text-popover-foreground p-3 border rounded-lg shadow-lg">
         <p className="font-semibold">{`${label}`}</p>
         {payload.map((entry, index) => (
           <p key={`item-${index}`} style={{ color: entry.color }}>
@@ -85,15 +85,15 @@ export function Charts({
             <AreaChart data={benchData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorWeight" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#000000" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#000000" stopOpacity={0.1} />
+                  <stop offset="5%" stopColor="#22d3ee" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#22d3ee" stopOpacity={0.1} />
                 </linearGradient>
                 <linearGradient id="colorGoal" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#8884d8" stopOpacity={0.1} />
+                  <stop offset="5%" stopColor="#a78bfa" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#a78bfa" stopOpacity={0.1} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f5f5f5" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#243049" />
               <XAxis dataKey="date" />
               <YAxis domain={["dataMin - 20", "dataMax + 20"]} />
               <Tooltip content={<CustomTooltip />} />
@@ -102,7 +102,7 @@ export function Charts({
                 type="monotone"
                 dataKey="weight"
                 name="Weight"
-                stroke="#000000"
+                stroke="#22d3ee"
                 fillOpacity={1}
                 fill="url(#colorWeight)"
                 strokeWidth={3}
@@ -111,7 +111,7 @@ export function Charts({
                 type="monotone"
                 dataKey="goal"
                 name="Goal"
-                stroke="#8884d8"
+                stroke="#a78bfa"
                 fillOpacity={0.3}
                 fill="url(#colorGoal)"
                 strokeDasharray="5 5"
@@ -120,7 +120,7 @@ export function Charts({
                 type="monotone" 
                 dataKey="rpe" 
                 name="RPE" 
-                stroke="#ff7300" 
+                stroke="#fbbf24" 
                 yAxisId={1} 
                 hide={true} 
               />
@@ -209,7 +209,7 @@ export function Charts({
                     type="monotone" 
                     dataKey="squat" 
                     name="Squat" 
-                    stroke="#8884d8" 
+                    stroke="#a78bfa" 
                     activeDot={{ r: 8 }} 
                     strokeWidth={2}
                     connectNulls={true}
@@ -220,7 +220,7 @@ export function Charts({
                     type="monotone" 
                     dataKey="bench" 
                     name="Bench" 
-                    stroke="#82ca9d" 
+                    stroke="#34d399" 
                     activeDot={{ r: 8 }} 
                     strokeWidth={2}
                     connectNulls={true}
@@ -231,7 +231,7 @@ export function Charts({
                     type="monotone" 
                     dataKey="deadlift" 
                     name="Deadlift" 
-                    stroke="#ff7300" 
+                    stroke="#fbbf24" 
                     activeDot={{ r: 8 }} 
                     strokeWidth={2}
                     connectNulls={true}
@@ -251,7 +251,7 @@ export function Charts({
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="tonnage" name="Total Tonnage (Sets × Reps × Weight)" fill="#000" />
+                <Bar dataKey="tonnage" name="Total Tonnage (Sets × Reps × Weight)" fill="#22d3ee" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -270,7 +270,7 @@ export function Charts({
                   type="monotone"
                   dataKey="rpe"
                   name="RPE (Actual Exertion)"
-                  stroke="#000000"
+                  stroke="#22d3ee"
                   strokeWidth={2}
                   dot={{ r: 4, strokeWidth: 1 }}
                   activeDot={{ r: 6 }}
@@ -279,7 +279,7 @@ export function Charts({
                   type="monotone"
                   dataKey="recovery"
                   name="Recovery Score"
-                  stroke="#00c49f"
+                  stroke="#34d399"
                   strokeWidth={2}
                   dot={{ r: 4, strokeWidth: 1 }}
                   activeDot={{ r: 6 }}
@@ -298,7 +298,7 @@ export function Charts({
                 <YAxis dataKey="lift" type="category" />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="optimalReps" name="Optimal Reps" fill="#000000" />
+                <Bar dataKey="optimalReps" name="Optimal Reps" fill="#22d3ee" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -317,7 +317,7 @@ export function Charts({
                   type="monotone"
                   dataKey="performance"
                   name="Performance Score"
-                  stroke="#000000"
+                  stroke="#22d3ee"
                   strokeWidth={2}
                 />
               </LineChart>
@@ -342,7 +342,7 @@ export function Charts({
                       type="monotone"
                       dataKey="weight"
                       name="Total Weight"
-                      stroke="#000000"
+                      stroke="#22d3ee"
                       strokeWidth={2}
                     />
                   </LineChart>
@@ -365,7 +365,7 @@ export function Charts({
                       type="monotone"
                       dataKey="weight"
                       name="Total Weight"
-                      stroke="#000000"
+                      stroke="#22d3ee"
                       strokeWidth={2}
                     />
                   </LineChart>
@@ -388,7 +388,7 @@ export function Charts({
                       type="monotone"
                       dataKey="weight"
                       name="Total Weight"
-                      stroke="#000000"
+                      stroke="#22d3ee"
                       strokeWidth={2}
                     />
                   </LineChart>
@@ -404,15 +404,15 @@ export function Charts({
               <AreaChart data={deadliftData || []} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorDeadliftWeight" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ff7300" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#ff7300" stopOpacity={0.1} />
+                    <stop offset="5%" stopColor="#fbbf24" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#fbbf24" stopOpacity={0.1} />
                   </linearGradient>
                   <linearGradient id="colorDeadliftGoal" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#8884d8" stopOpacity={0.1} />
+                    <stop offset="5%" stopColor="#a78bfa" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#a78bfa" stopOpacity={0.1} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f5f5f5" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#243049" />
                 <XAxis dataKey="date" />
                 <YAxis domain={["dataMin - 20", "dataMax + 20"]} />
                 <Tooltip content={<CustomTooltip />} />
@@ -421,7 +421,7 @@ export function Charts({
                   type="monotone" 
                   dataKey="weight" 
                   name="Weight" 
-                  stroke="#ff7300" 
+                  stroke="#fbbf24" 
                   fillOpacity={1}
                   fill="url(#colorDeadliftWeight)" 
                   strokeWidth={3}
@@ -431,7 +431,7 @@ export function Charts({
                   type="monotone"
                   dataKey="goal"
                   name="Goal"
-                  stroke="#8884d8"
+                  stroke="#a78bfa"
                   fillOpacity={0.3}
                   fill="url(#colorDeadliftGoal)"
                   strokeDasharray="5 5"
@@ -441,7 +441,7 @@ export function Charts({
                     type="monotone" 
                     dataKey="rpe" 
                     name="RPE" 
-                    stroke="#8884d8" 
+                    stroke="#a78bfa" 
                     yAxisId={1}
                     hide={true}
                   />
@@ -458,15 +458,15 @@ export function Charts({
               <AreaChart data={benchData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorWeight" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#000000" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#000000" stopOpacity={0.1} />
+                    <stop offset="5%" stopColor="#22d3ee" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#22d3ee" stopOpacity={0.1} />
                   </linearGradient>
                   <linearGradient id="colorGoal" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#8884d8" stopOpacity={0.1} />
+                    <stop offset="5%" stopColor="#a78bfa" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#a78bfa" stopOpacity={0.1} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f5f5f5" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#243049" />
                 <XAxis dataKey="date" />
                 <YAxis domain={["dataMin - 20", "dataMax + 20"]} />
                 <Tooltip content={<CustomTooltip />} />
@@ -475,7 +475,7 @@ export function Charts({
                   type="monotone"
                   dataKey="weight"
                   name="Weight"
-                  stroke="#000000"
+                  stroke="#22d3ee"
                   fillOpacity={1}
                   fill="url(#colorWeight)"
                   strokeWidth={3}
@@ -484,7 +484,7 @@ export function Charts({
                   type="monotone"
                   dataKey="goal"
                   name="Goal"
-                  stroke="#8884d8"
+                  stroke="#a78bfa"
                   fillOpacity={0.3}
                   fill="url(#colorGoal)"
                   strokeDasharray="5 5"
@@ -493,7 +493,7 @@ export function Charts({
                   type="monotone" 
                   dataKey="rpe" 
                   name="RPE" 
-                  stroke="#ff7300" 
+                  stroke="#fbbf24" 
                   yAxisId={1} 
                   hide={true} 
                 />
