@@ -1,7 +1,4 @@
-import { google } from 'googleapis';
-
-// Initialize the Google Sheets API
-const sheets = google.sheets('v4');
+// googleapis is loaded lazily (only needed when an API key is configured)
 
 // Your API key
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_SHEETS_API_KEY;
@@ -20,6 +17,8 @@ export interface SheetData {
 
 export async function fetchSheetData(spreadsheetId: string, range: string): Promise<SheetData[]> {
   try {
+    const { google } = await import('googleapis');
+    const sheets = google.sheets('v4');
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId,
       range,

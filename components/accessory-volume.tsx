@@ -70,9 +70,9 @@ export function AccessoryVolume() {
               <YAxis />
               <Tooltip />
               <Legend />
-              <Line type="monotone" dataKey="Incline Press" stroke="#000000" strokeWidth={2} />
-              <Line type="monotone" dataKey="Dumbbell Press" stroke="#8884d8" strokeWidth={2} />
-              <Line type="monotone" dataKey="Close Grip" stroke="#82ca9d" strokeWidth={2} />
+              <Line type="monotone" dataKey="Incline Press" stroke="#22d3ee" strokeWidth={2} />
+              <Line type="monotone" dataKey="Dumbbell Press" stroke="#a78bfa" strokeWidth={2} />
+              <Line type="monotone" dataKey="Close Grip" stroke="#34d399" strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -89,9 +89,9 @@ export function AccessoryVolume() {
               <YAxis />
               <Tooltip />
               <Legend />
-              <Line type="monotone" dataKey="Front Squat" stroke="#000000" strokeWidth={2} />
-              <Line type="monotone" dataKey="Bulgarian Split" stroke="#8884d8" strokeWidth={2} />
-              <Line type="monotone" dataKey="Leg Press" stroke="#82ca9d" strokeWidth={2} />
+              <Line type="monotone" dataKey="Front Squat" stroke="#22d3ee" strokeWidth={2} />
+              <Line type="monotone" dataKey="Bulgarian Split" stroke="#a78bfa" strokeWidth={2} />
+              <Line type="monotone" dataKey="Leg Press" stroke="#34d399" strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -108,30 +108,30 @@ export function AccessoryVolume() {
               <YAxis />
               <Tooltip />
               <Legend />
-              <Line type="monotone" dataKey="Romanian Deadlift" stroke="#000000" strokeWidth={2} />
-              <Line type="monotone" dataKey="Good Morning" stroke="#8884d8" strokeWidth={2} />
-              <Line type="monotone" dataKey="Back Extension" stroke="#82ca9d" strokeWidth={2} />
+              <Line type="monotone" dataKey="Romanian Deadlift" stroke="#22d3ee" strokeWidth={2} />
+              <Line type="monotone" dataKey="Good Morning" stroke="#a78bfa" strokeWidth={2} />
+              <Line type="monotone" dataKey="Back Extension" stroke="#34d399" strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
         </div>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
-        <Card className="bg-gray-50">
+        <Card className="bg-muted/40">
           <CardContent className="p-4">
             <div className="text-sm font-medium">Total Bench Accessories</div>
             <div className="text-2xl font-bold">7,300 lbs</div>
             <div className="text-xs text-green-600">+600 lbs from last week</div>
           </CardContent>
         </Card>
-        <Card className="bg-gray-50">
+        <Card className="bg-muted/40">
           <CardContent className="p-4">
             <div className="text-sm font-medium">Total Squat Accessories</div>
             <div className="text-2xl font-bold">10,000 lbs</div>
             <div className="text-xs text-green-600">+800 lbs from last week</div>
           </CardContent>
         </Card>
-        <Card className="bg-gray-50">
+        <Card className="bg-muted/40">
           <CardContent className="p-4">
             <div className="text-sm font-medium">Total Deadlift Accessories</div>
             <div className="text-2xl font-bold">8,100 lbs</div>
